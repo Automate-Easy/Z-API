@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Monitor Z-API</title>
+    <title>Solicitar código do WhatsApp</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -55,8 +55,8 @@
         <!-- Dropdown para selecionar a instância -->
         <select id="instance-select">
             <option value="">Selecione uma opção</option>
-            <option value="558191037041">(81) 9103-7041 (Instância A)</option>
-            <option value="558195956982">(81) 9595-6982 (Instância B)</option>
+            <option value="558195956982">Opção 1 </option>
+            <option value="558191037041">Opção 2 </option>
         </select>
 
         <!-- Exibição do código -->
@@ -75,12 +75,12 @@
         // Dados das instâncias (substitua com seus valores reais)
         const instances = {
             opcao1: {
-                instancia: "3D7DCCD13769605AF7E9B2D4EBC7E202",
-                token: "C2D12E009B4642F99ADFC7CB"
-            },
-            opcao2: {
                 instancia: "3D67BF8C04F6A0AE58362272D360C213",
                 token: "5FB1E9C5F40F3DA299FB1C4A"
+            },
+            opcao2: {
+                instancia: "3D7DCCD13769605AF7E9B2D4EBC7E202",
+                token: "C2D12E009B4642F99ADFC7CB"
             }
         };
 
@@ -90,7 +90,7 @@
         let countdownInterval;
         let progressInterval;
 
-       // Função principal
+        // Função principal
         async function fetchData() {
             const selectedOption = document.getElementById("instance-select").value;
             
