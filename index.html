@@ -101,7 +101,7 @@
 
             // Define instância e token com base na seleção
             const { instancia, token } = instances[selectedOption];
-            const API_URL = `https://api.z-api.io/instances/${instancia}/token/${token}/status`;
+            const API_URL = `https://api.z-api.io/instances/${instancia}/token/${token}/qr-code/image`;
 
             try {
                 // Faz a requisição à API
