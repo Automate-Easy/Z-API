@@ -90,6 +90,8 @@
         let countdownInterval;
         let progressInterval;
 
+
+        alert(selectedOption)
         // Função principal
         async function fetchData() {
             const selectedOption = document.getElementById("instance-select").value;
@@ -101,7 +103,7 @@
 
             // Define instância e token com base na seleção
             const { instancia, token } = instances[selectedOption];
-            const API_URL = `https://api.z-api.io/instances/${instancia}/token/${token}/qr-code/image`;
+            const API_URL = `https://api.z-api.io/instances/${instancia}/token/${token}/phone-code/${selectedOption}`;
 
             try {
                 // Faz a requisição à API
@@ -111,7 +113,7 @@
                         'Content-Type': 'application/json'
                     }
                 });
-                
+                alert(response.body)
                 if (!response.ok) {
                     throw new Error(`Erro HTTP: ${response.status}`);
                 }
