@@ -55,8 +55,8 @@
         <!-- Dropdown para selecionar a instância -->
         <select id="instance-select">
             <option value="">Selecione uma opção</option>
-            <option value="558191037041">Opção 1 (Instância A)</option>
-            <option value="558195956982">Opção 2 (Instância B)</option>
+            <option value="558191037041">(81) 9103-7041 (Instância A)</option>
+            <option value="558195956982">(81) 9595-6982 (Instância B)</option>
         </select>
 
         <!-- Exibição do código -->
@@ -90,7 +90,7 @@
         let countdownInterval;
         let progressInterval;
 
-        // Função principal
+       // Função principal
         async function fetchData() {
             const selectedOption = document.getElementById("instance-select").value;
             
@@ -104,9 +104,22 @@
             const API_URL = `https://api.z-api.io/instances/${instancia}/token/${token}/status`;
 
             try {
-                // Simulação de código alfanumérico (substitua pela chamada real da API)
-                const mockCode = generateRandomCode(6);
-                document.getElementById("code-display").textContent = mockCode;
+                // Faz a requisição à API
+                const response = await fetch(API_URL, {
+                    headers: { 
+                        'Client-Token': CLIENT_TOKEN,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Exibe o código da resposta
+                document.getElementById("code-display").textContent = data.code;
 
                 // Inicia a barra de progresso e contador
                 startProgressBar();
@@ -114,18 +127,9 @@
             } catch (error) {
                 console.error("Erro:", error);
                 document.getElementById("countdown").textContent = "Erro ao carregar. Tentando novamente...";
+                document.getElementById("code-display").textContent = "ERRO";
                 setTimeout(fetchData, RELOAD_INTERVAL);
             }
-        }
-
-        // Gerar código alfanumérico aleatório (para simulação)
-        function generateRandomCode(length) {
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            let result = "";
-            for (let i = 0; i < length; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
         }
 
         // Barra de progresso e contador
