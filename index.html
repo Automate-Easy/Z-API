@@ -1,20 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Monitor de Imagens Z-API</title>
+    <title>Monitor Z-API</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            text-align: center; 
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
             margin: 20px;
             background-color: #f0f0f0;
         }
-        #image-container {
-            margin: 20px auto;
-            max-width: 90%;
-            border: 1px solid #ddd;
-            padding: 10px;
+        #container {
             background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        select, button {
+            padding: 10px;
+            margin: 10px;
+            width: 80%;
+        }
+        #code-display {
+            font-size: 3em;
+            letter-spacing: 5px;
+            margin: 20px 0;
+            color: #007bff;
+        }
+        #progress-container {
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            margin: 20px auto;
+            width: 80%;
+        }
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #007bff;
+            border-radius: 5px;
+            transition: width 0.1s linear;
         }
         #countdown {
             font-size: 1.2em;
@@ -23,69 +49,115 @@
     </style>
 </head>
 <body>
-    <h1>Monitor de Imagens Z-API</h1>
-    <div id="countdown">Próxima atualização em: 20 segundos</div>
-    <div id="image-container">
-        <img id="api-image" style="max-width: 100%; display: none;">
+    <div id="container">
+        <h1>Monitor Z-API</h1>
+        
+        <!-- Dropdown para selecionar a instância -->
+        <select id="instance-select">
+            <option value="">Selecione uma opção</option>
+            <option value="opcao1">Opção 1 (Instância A)</option>
+            <option value="opcao2">Opção 2 (Instância B)</option>
+        </select>
+
+        <!-- Exibição do código -->
+        <div id="code-display">------</div>
+        
+        <!-- Barra de progresso -->
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+        
+        <!-- Contador regressivo -->
+        <div id="countdown">Próxima atualização em: 15 segundos</div>
     </div>
 
     <script>
-        const API_URL = 'https://api.z-api.io/instances/3D67BF8C04F6A0AE58362272D360C213/token/5FB1E9C5F40F3DA299FB1C4A/qr-code/image';
-        const CLIENT_TOKEN = 'Ffa07a322c30c40f69a39b5700df9bea8S'; // Substitua pelo seu Client-Token
-        const RELOAD_INTERVAL = 20000; // 20 segundos em milissegundos
+        // Dados das instâncias (substitua com seus valores reais)
+        const instances = {
+            opcao1: {
+                instancia: "INSTANCIA_A",
+                token: "TOKEN_DA_INSTANCIA_A"
+            },
+            opcao2: {
+                instancia: "INSTANCIA_B",
+                token: "TOKEN_DA_INSTANCIA_B"
+            }
+        };
 
+        // Configurações
+        const CLIENT_TOKEN = "SEU_CLIENT_TOKEN"; // Substitua pelo seu Client-Token
+        const RELOAD_INTERVAL = 15000; // 15 segundos em milissegundos
         let countdownInterval;
+        let progressInterval;
 
-        async function fetchAndDisplayImage() {
+        // Função principal
+        async function fetchData() {
+            const selectedOption = document.getElementById("instance-select").value;
+            
+            if (!selectedOption) {
+                alert("Selecione uma opção!");
+                return;
+            }
+
+            // Define instância e token com base na seleção
+            const { instancia, token } = instances[selectedOption];
+            const API_URL = `https://api.z-api.io/instances/${instancia}/token/${token}/status`;
+
             try {
-                // Mostra mensagem de carregamento
-                document.getElementById('api-image').style.display = 'none';
-                document.getElementById('countdown').textContent = 'Carregando...';
+                // Simulação de código alfanumérico (substitua pela chamada real da API)
+                const mockCode = generateRandomCode(6);
+                document.getElementById("code-display").textContent = mockCode;
 
-                // Faz a requisição à API
-                const response = await fetch(API_URL, {
-                    headers: { 'Client-Token': CLIENT_TOKEN }
-                });
-                const base64Data = await response.text();
-
-                // Converte Base64 para imagem
-                const imgElement = document.getElementById('api-image');
-                imgElement.src = `data:image/png;base64,${base64Data}`;
-                imgElement.style.display = 'block';
-                imgElement.onload = () => {
-                    // Inicia o contador regressivo
-                    startCountdown();
-                };
+                // Inicia a barra de progresso e contador
+                startProgressBar();
 
             } catch (error) {
-                document.getElementById('countdown').textContent = `Erro: ${error.message}`;
-                setTimeout(fetchAndDisplayImage, RELOAD_INTERVAL); // Tenta novamente após 20s
+                console.error("Erro:", error);
+                document.getElementById("countdown").textContent = "Erro ao carregar. Tentando novamente...";
+                setTimeout(fetchData, RELOAD_INTERVAL);
             }
         }
 
-        function startCountdown() {
-            let secondsLeft = 20;
-            document.getElementById('countdown').textContent = `Próxima atualização em: ${secondsLeft} segundos`;
+        // Gerar código alfanumérico aleatório (para simulação)
+        function generateRandomCode(length) {
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            let result = "";
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
 
-            clearInterval(countdownInterval); // Limpa qualquer intervalo anterior
-            countdownInterval = setInterval(() => {
-                secondsLeft--;
-                document.getElementById('countdown').textContent = `Próxima atualização em: ${secondsLeft} segundos`;
+        // Barra de progresso e contador
+        function startProgressBar() {
+            let timeLeft = 15;
+            const progressBar = document.getElementById("progress-bar");
+            const countdownElement = document.getElementById("countdown");
 
-                if (secondsLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    location.reload(); // Recarrega a página para nova requisição
+            // Resetar
+            clearInterval(progressInterval);
+            clearInterval(countdownInterval);
+            progressBar.style.width = "100%";
+
+            // Atualiza a cada segundo
+            progressInterval = setInterval(() => {
+                timeLeft--;
+                countdownElement.textContent = `Próxima atualização em: ${timeLeft} segundos`;
+                
+                // Atualiza a barra
+                const progressPercent = (timeLeft / 15) * 100;
+                progressBar.style.width = `${progressPercent}%`;
+
+                // Recarrega ao final
+                if (timeLeft <= 0) {
+                    clearInterval(progressInterval);
+                    fetchData(); // Reinicia o ciclo
                 }
             }, 1000);
         }
 
-        // Inicia o processo quando a página carrega
-        window.onload = fetchAndDisplayImage;
+        // Inicia ao selecionar uma opção
+        document.getElementById("instance-select").addEventListener("change", fetchData);
     </script>
 </body>
 </html>
-
-
-
-
-
