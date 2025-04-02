@@ -80,7 +80,7 @@
         
         #progress-bar {
             height: 100%;
-            width: 100%;
+            width: 0%;
             background-color: var(--whatsapp-green-light);
             transition: width 0.1s linear;
         }
@@ -219,16 +219,9 @@
         const canvas = document.getElementById('qr-canvas');
         const ctx = canvas.getContext('2d');
 
-        // Função para formatar a resposta da API
-        function formatResponse(response) {
-            if (response instanceof ArrayBuffer) {
-                return `ArrayBuffer (${response.byteLength} bytes)`;
-            }
-            try {
-                return JSON.stringify(response, null, 2);
-            } catch {
-                return response.toString();
-            }
+        // Função para formatar JSON de forma legível
+        function formatJSON(data) {
+            return JSON.stringify(data, null, 2);
         }
 
         // Função para renderizar QR Code a partir de bytes
@@ -284,16 +277,23 @@
                     throw new Error(`Erro HTTP: ${response.status}`);
                 }
                 
-                // Obtém os bytes da resposta
+                // Armazena a resposta original para exibição
+                const responseClone = response.clone();
+                const responseText = await responseClone.text();
+                
+                // Exibe a resposta completa
+                try {
+                    const jsonData = JSON.parse(responseText);
+                    document.getElementById("response-data").textContent = formatJSON(jsonData);
+                } catch {
+                    document.getElementById("response-data").textContent = responseText;
+                }
+                
+                // Processa os bytes para o QR Code
                 const bytes = await response.arrayBuffer();
-                
-                // Exibe a resposta crua para monitoramento
-                document.getElementById("response-data").textContent = formatResponse(bytes);
-                
-                // Renderiza o QR Code
                 await renderQrCodeFromBytes(bytes);
                 
-                // Inicia o contador
+                // Inicia o contador com a barra de progresso
                 startProgressBar();
 
             } catch (error) {
@@ -304,15 +304,19 @@
             }
         }
 
-        // Barra de progresso e contador
+        // Barra de progresso e contador (corrigida)
         function startProgressBar() {
             let timeLeft = 15;
             const progressBar = document.getElementById("progress-bar");
             const countdownElement = document.getElementById("countdown");
 
+            // Limpa intervalos anteriores
             clearInterval(progressInterval);
             clearInterval(countdownInterval);
+            
+            // Reinicia a barra
             progressBar.style.width = "100%";
+            countdownElement.textContent = `Próxima atualização em: ${timeLeft} segundos`;
 
             progressInterval = setInterval(() => {
                 timeLeft--;
