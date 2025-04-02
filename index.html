@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Monitor Z-API</title>
+    <title>Lógica DG</title>
     <style>
         :root {
             --whatsapp-green: #128C7E;
@@ -13,7 +13,76 @@
             --whatsapp-light-gray: #f5f6f6;
         }
         
-        /* ... (mantenha o resto do CSS anterior igual) ... */
+        body {
+            font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--whatsapp-chat-bg);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--whatsapp-gray);
+        }
+        
+        #container {
+            background-color: var(--whatsapp-white);
+            width: 380px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        .header {
+            background-color: var(--whatsapp-green-dark);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .content {
+            padding: 24px;
+        }
+        
+        select {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 20px;
+            border: 1px solid #e1e3e6;
+            border-radius: 8px;
+            font-size: 15px;
+            background-color: var(--whatsapp-light-gray);
+            color: var(--whatsapp-gray);
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667781' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 16px;
+        }
+        
+        .code-section {
+            background-color: var(--whatsapp-light-gray);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .section-title {
+            color: var(--whatsapp-gray);
+            font-size: 15px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        
+        .code-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
         
         .code-digit {
             width: 50px;
@@ -28,29 +97,153 @@
             color: var(--whatsapp-green-dark);
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             border: 1px solid #e1e3e6;
-            flex-shrink: 0; /* Impede que os quadrados reduzam */
         }
         
         .code-digit.hyphen {
             background: transparent;
             border: none;
             box-shadow: none;
-            width: 20px; /* Largura fixa para o hífen */
+            width: 10px;
+        }
+        
+        .progress-container {
+            height: 6px;
+            background-color: #e0e0e0;
+            border-radius: 3px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        #progress-bar {
+            height: 100%;
+            width: 100%;
+            background-color: var(--whatsapp-green-light);
+            transition: width 0.1s linear;
+        }
+        
+        #countdown {
+            color: var(--whatsapp-gray);
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .check-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .check-icon {
+            width: 60px;
+            height: 60px;
+            background-color: var(--whatsapp-green-light);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: white;
+            font-size: 32px;
+            animation: checkPop 0.4s ease-out;
         }
         
-        /* ... (mantenha o resto do CSS anterior igual) ... */
+        @keyframes checkPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .whatsapp-loading {
+            display: inline-block;
+            position: relative;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .whatsapp-loading div {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--whatsapp-green-light);
+            border-radius: 50%;
+            animation: whatsapp-loading 1.2s linear infinite;
+        }
+        
+        .whatsapp-loading div:nth-child(1) {
+            animation-delay: 0s;
+            left: 0;
+        }
+        
+        .whatsapp-loading div:nth-child(2) {
+            animation-delay: -0.4s;
+            left: 8px;
+        }
+        
+        .whatsapp-loading div:nth-child(3) {
+            animation-delay: -0.8s;
+            left: 16px;
+        }
+        
+        @keyframes whatsapp-loading {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-6px);
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- ... (mantenha o HTML anterior igual) ... -->
+    <div id="container">
+        <div class="header">
+            <span>Robô de Cobranas<br>LógicaDG</span>
+        </div>
+        
+        <div class="content">
+            <select id="phone-select">
+                <option value="">Selecione um número</option>
+                <option value="phone1">(81) 9103-7041</option>
+                <option value="phone2">(81) 9595-6982</option>
+            </select>
+            
+            <div class="code-section">
+                <div id="section-title" class="section-title">STATUS DO DISPOSITIVO</div>
+                <div id="code-display">
+                    <!-- Dinâmico - será preenchido pelo JavaScript -->
+                </div>
+            </div>
+            
+            <div class="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+            
+            <div id="countdown">Próxima atualização em: 15 segundos</div>
+        </div>
+    </div>
 
     <script>
-        // ... (mantenha o JavaScript anterior igual até a função createCodeDigits) ...
+        // Configurações - mapeamento de telefones para instância/token
+        const phoneConfig = {
+            phone1: {
+                instancia: "3D7DCCD13769605AF7E9B2D4EBC7E202",
+                token: "C2D12E009B4642F99ADFC7CB",
+                phone: "558191037041"
+            },
+            phone2: {
+                instancia: "3D67BF8C04F6A0AE58362272D360C213",
+                token: "5FB1E9C5F40F3DA299FB1C4A",
+                phone: "558195956982"
+            }
+        };
+        
+        const CLIENT_TOKEN = "Ffa07a322c30c40f69a39b5700df9bea8S";
+        const RELOAD_INTERVAL = 15000;
+        
+        let countdownInterval;
+        let progressInterval;
 
-        // Função modificada para criar dígitos com tamanho consistente
+        // Função para criar os dígitos do código com estilo
         function createCodeDigits(code) {
             const formattedCode = code.length === 8 
                 ? `${code.substring(0, 4)}-${code.substring(4)}` 
@@ -61,24 +254,102 @@
             
             for (let i = 0; i < formattedCode.length; i++) {
                 const digit = document.createElement('div');
-                const isHyphen = formattedCode[i] === '-';
-                digit.className = isHyphen ? 'code-digit hyphen' : 'code-digit';
-                
-                // Centraliza o caractere perfeitamente
-                const charSpan = document.createElement('span');
-                charSpan.textContent = formattedCode[i];
-                charSpan.style.display = 'inline-block';
-                charSpan.style.width = '100%';
-                charSpan.style.textAlign = 'center';
-                
-                digit.appendChild(charSpan);
+                digit.className = formattedCode[i] === '-' ? 'code-digit hyphen' : 'code-digit';
+                digit.textContent = formattedCode[i];
                 container.appendChild(digit);
             }
             
             return container;
         }
 
-        // ... (mantenha o resto do JavaScript anterior igual) ...
+        // Função principal
+        async function fetchData() {
+            const selectedPhone = document.getElementById("phone-select").value;
+            
+            if (!selectedPhone) {
+                alert("Selecione um número de telefone!");
+                return;
+            }
+
+            const { instancia, token, phone } = phoneConfig[selectedPhone];
+            const API_URL = `https://api.z-api.io/instances/${instancia}/token/${token}/phone-code/${phone}`;
+
+            try {
+                const response = await fetch(API_URL, {
+                    headers: { 
+                        'Client-Token': CLIENT_TOKEN,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const codeDisplay = document.getElementById("code-display");
+                const sectionTitle = document.getElementById("section-title");
+                
+                // Verifica se o dispositivo está conectado
+                if (data.connected) {
+                    codeDisplay.innerHTML = `
+                        <div class="check-container">
+                            <div class="check-icon">✓</div>
+                        </div>
+                    `;
+                    sectionTitle.textContent = "STATUS DO DISPOSITIVO";
+                    
+                    // Para de atualizar quando conectado
+                    clearInterval(progressInterval);
+                    clearInterval(countdownInterval);
+                    document.getElementById("countdown").textContent = "Conexão estabelecida com sucesso";
+                    document.getElementById("progress-bar").style.width = "0%";
+                } else if (data.code) {
+                    // Exibe o código formatado
+                    sectionTitle.textContent = "Insira o código no seu celular";
+                    codeDisplay.innerHTML = '';
+                    codeDisplay.appendChild(createCodeDigits(data.code));
+                    startProgressBar();
+                } else {
+                    sectionTitle.textContent = "STATUS DO DISPOSITIVO";
+                    codeDisplay.textContent = "Aguardando código...";
+                    startProgressBar();
+                }
+
+            } catch (error) {
+                console.error("Erro:", error);
+                document.getElementById("countdown").textContent = "Erro ao carregar. Tentando novamente...";
+                document.getElementById("code-display").innerHTML = '<div style="color: #ff4444;">ERRO</div>';
+                setTimeout(fetchData, RELOAD_INTERVAL);
+            }
+        }
+
+        // Barra de progresso e contador
+        function startProgressBar() {
+            let timeLeft = 15;
+            const progressBar = document.getElementById("progress-bar");
+            const countdownElement = document.getElementById("countdown");
+
+            clearInterval(progressInterval);
+            clearInterval(countdownInterval);
+            progressBar.style.width = "100%";
+
+            progressInterval = setInterval(() => {
+                timeLeft--;
+                countdownElement.textContent = `Próxima atualização em: ${timeLeft} segundos`;
+                
+                const progressPercent = (timeLeft / 15) * 100;
+                progressBar.style.width = `${progressPercent}%`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(progressInterval);
+                    fetchData();
+                }
+            }, 1000);
+        }
+
+        // Inicia ao selecionar um telefone
+        document.getElementById("phone-select").addEventListener("change", fetchData);
     </script>
 </body>
 </html>
