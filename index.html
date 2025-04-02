@@ -63,7 +63,7 @@
             border-radius: 8px;
         }
         
-        #qr-canvas {
+        #qr-image {
             max-width: 250px;
             max-height: 250px;
             margin: 0 auto;
@@ -80,7 +80,7 @@
         
         #progress-bar {
             height: 100%;
-            width: 0%;
+            width: 100%;
             background-color: var(--whatsapp-green-light);
             transition: width 0.1s linear;
         }
@@ -90,12 +90,6 @@
             font-size: 14px;
             text-align: center;
             margin-bottom: 15px;
-        }
-        
-        .instructions {
-            font-size: 13px;
-            color: var(--whatsapp-gray);
-            margin-top: 10px;
         }
         
         .response-section {
@@ -163,6 +157,12 @@
                 transform: translateY(-6px);
             }
         }
+        
+        .instructions {
+            font-size: 13px;
+            color: var(--whatsapp-gray);
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -179,7 +179,7 @@
             </select>
             
             <div class="qr-container">
-                <canvas id="qr-canvas"></canvas>
+                <img id="qr-image" src="" alt="QR Code">
                 <div class="instructions">Escaneie este QR Code no WhatsApp</div>
             </div>
             
@@ -216,31 +216,10 @@
         
         let countdownInterval;
         let progressInterval;
-        const canvas = document.getElementById('qr-canvas');
-        const ctx = canvas.getContext('2d');
 
         // Função para formatar JSON de forma legível
         function formatJSON(data) {
             return JSON.stringify(data, null, 2);
-        }
-
-        // Função para renderizar QR Code a partir de bytes
-        async function renderQrCodeFromBytes(bytes) {
-            return new Promise((resolve) => {
-                const blob = new Blob([bytes], { type: 'image/png' });
-                const url = URL.createObjectURL(blob);
-                const img = new Image();
-                
-                img.onload = function() {
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    ctx.drawImage(img, 0, 0);
-                    URL.revokeObjectURL(url);
-                    resolve();
-                };
-                
-                img.src = url;
-            });
         }
 
         // Função principal
@@ -256,8 +235,8 @@
             const API_URL = `https://api.z-api.io/instances/${instancia}/token/${token}/qr-code`;
 
             try {
-                // Estado de loading
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Mostra estado de loading
+                document.getElementById("qr-image").style.display = "none";
                 document.getElementById("response-data").innerHTML = `
                     <div style="display: flex; justify-content: center; align-items: center; height: 40px;">
                         <div class="whatsapp-loading">
@@ -277,46 +256,34 @@
                     throw new Error(`Erro HTTP: ${response.status}`);
                 }
                 
-                // Armazena a resposta original para exibição
-                const responseClone = response.clone();
-                const responseText = await responseClone.text();
+                const data = await response.json();
                 
-                // Exibe a resposta completa
-                try {
-                    const jsonData = JSON.parse(responseText);
-                    document.getElementById("response-data").textContent = formatJSON(jsonData);
-                } catch {
-                    document.getElementById("response-data").textContent = responseText;
-                }
+                // Exibe o QR Code
+                const qrImage = document.getElementById("qr-image");
+                qrImage.src = data.value;
+                qrImage.style.display = "block";
                 
-                // Processa os bytes para o QR Code
-                const bytes = await response.arrayBuffer();
-                await renderQrCodeFromBytes(bytes);
-                
-                // Inicia o contador com a barra de progresso
+                document.getElementById("response-data").textContent = formatJSON(data);
                 startProgressBar();
 
             } catch (error) {
                 console.error("Erro:", error);
                 document.getElementById("countdown").textContent = "Erro ao carregar. Tentando novamente...";
+                document.getElementById("qr-image").style.display = "none";
                 document.getElementById("response-data").textContent = `Erro: ${error.message}`;
                 setTimeout(fetchData, RELOAD_INTERVAL);
             }
         }
 
-        // Barra de progresso e contador (corrigida)
+        // Barra de progresso e contador
         function startProgressBar() {
             let timeLeft = 15;
             const progressBar = document.getElementById("progress-bar");
             const countdownElement = document.getElementById("countdown");
 
-            // Limpa intervalos anteriores
             clearInterval(progressInterval);
             clearInterval(countdownInterval);
-            
-            // Reinicia a barra
             progressBar.style.width = "100%";
-            countdownElement.textContent = `Próxima atualização em: ${timeLeft} segundos`;
 
             progressInterval = setInterval(() => {
                 timeLeft--;
