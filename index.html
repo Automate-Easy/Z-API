@@ -63,7 +63,7 @@
             border-radius: 8px;
         }
         
-        #qr-image {
+        #qr-canvas {
             max-width: 250px;
             max-height: 250px;
             margin: 0 auto;
@@ -92,72 +92,6 @@
             margin-bottom: 15px;
         }
         
-        .response-section {
-            background-color: var(--whatsapp-light-gray);
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        
-        .section-title {
-            color: var(--whatsapp-gray);
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-        
-        #response-data {
-            background-color: white;
-            padding: 12px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 12px;
-            white-space: pre-wrap;
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #e0e0e0;
-        }
-        
-        .whatsapp-loading {
-            display: inline-block;
-            position: relative;
-            width: 20px;
-            height: 20px;
-        }
-        
-        .whatsapp-loading div {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: var(--whatsapp-green-light);
-            border-radius: 50%;
-            animation: whatsapp-loading 1.2s linear infinite;
-        }
-        
-        .whatsapp-loading div:nth-child(1) {
-            animation-delay: 0s;
-            left: 0;
-        }
-        
-        .whatsapp-loading div:nth-child(2) {
-            animation-delay: -0.4s;
-            left: 8px;
-        }
-        
-        .whatsapp-loading div:nth-child(3) {
-            animation-delay: -0.8s;
-            left: 16px;
-        }
-        
-        @keyframes whatsapp-loading {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-6px);
-            }
-        }
-        
         .instructions {
             font-size: 13px;
             color: var(--whatsapp-gray);
@@ -179,7 +113,7 @@
             </select>
             
             <div class="qr-container">
-                <img id="qr-image" src="" alt="QR Code">
+                <canvas id="qr-canvas"></canvas>
                 <div class="instructions">Escaneie este QR Code no WhatsApp</div>
             </div>
             
@@ -188,11 +122,6 @@
             </div>
             
             <div id="countdown">Próxima atualização em: 15 segundos</div>
-            
-            <div class="response-section">
-                <div class="section-title">RESPOSTA DA API</div>
-                <div id="response-data">Nenhum dado recebido ainda...</div>
-            </div>
         </div>
     </div>
 
@@ -216,10 +145,27 @@
         
         let countdownInterval;
         let progressInterval;
+        const canvas = document.getElementById('qr-canvas');
+        const ctx = canvas.getContext('2d');
 
-        // Função para formatar JSON de forma legível
-        function formatJSON(data) {
-            return JSON.stringify(data, null, 2);
+        // Função para converter bytes em imagem
+        async function renderQrCodeFromBytes(bytes) {
+            return new Promise((resolve) => {
+                const blob = new Blob([bytes], { type: 'image/png' });
+                const url = URL.createObjectURL(blob);
+                const img = new Image();
+                
+                img.onload = function() {
+                    // Ajusta o tamanho do canvas para a imagem
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    URL.revokeObjectURL(url);
+                    resolve();
+                };
+                
+                img.src = url;
+            });
         }
 
         // Função principal
@@ -235,15 +181,9 @@
             const API_URL = `https://api.z-api.io/instances/${instancia}/token/${token}/qr-code`;
 
             try {
-                // Mostra estado de loading
-                document.getElementById("qr-image").style.display = "none";
-                document.getElementById("response-data").innerHTML = `
-                    <div style="display: flex; justify-content: center; align-items: center; height: 40px;">
-                        <div class="whatsapp-loading">
-                            <div></div><div></div><div></div>
-                        </div>
-                    </div>
-                `;
+                // Limpa o canvas e mostra estado de loading
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                document.getElementById("countdown").textContent = "Carregando QR Code...";
                 
                 const response = await fetch(API_URL, {
                     headers: { 
@@ -256,21 +196,18 @@
                     throw new Error(`Erro HTTP: ${response.status}`);
                 }
                 
-                const data = await response.json();
+                // Obtém os bytes da resposta
+                const bytes = await response.arrayBuffer();
                 
-                // Exibe o QR Code
-                const qrImage = document.getElementById("qr-image");
-                qrImage.src = data.value;
-                qrImage.style.display = "block";
+                // Renderiza o QR Code
+                await renderQrCodeFromBytes(bytes);
                 
-                document.getElementById("response-data").textContent = formatJSON(data);
+                // Inicia a barra de progresso e contador
                 startProgressBar();
 
             } catch (error) {
                 console.error("Erro:", error);
                 document.getElementById("countdown").textContent = "Erro ao carregar. Tentando novamente...";
-                document.getElementById("qr-image").style.display = "none";
-                document.getElementById("response-data").textContent = `Erro: ${error.message}`;
                 setTimeout(fetchData, RELOAD_INTERVAL);
             }
         }
