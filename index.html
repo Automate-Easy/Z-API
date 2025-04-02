@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Solicitar código do WhatsApp</title>
+    <title>Monitor Z-API</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -46,20 +46,38 @@
             font-size: 1.2em;
             color: #333;
         }
+        #response-data {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-top: 15px;
+            color: #495057;
+        }
     </style>
 </head>
 <body>
     <div id="container">
-        <h1>Solicitar código do WhatsApp</h1>
+        <h1>Monitor Z-API</h1>
         
-        <!-- Dropdown para selecionar a instância -->
-        <select id="instance-select">
-            <option value="">Selecione uma opção</option>
-            <option value="558195956982">(81) 9595-6982 </option>
-            <option value="558191037041">(81) 9103-7041 </option>
+        <!-- Dropdown para selecionar o telefone -->
+        <select id="phone-select">
+            <option value="">Selecione um número</option>
+            <option value="phone1">(81) 9103-7041</option>
+            <option value="phone2">(81) 9595-6982</option>
         </select>
 
         <!-- Exibição do código -->
+        <div class="section-title">Código Recebido:</div>
         <div id="code-display">------</div>
         
         <!-- Barra de progresso -->
@@ -69,43 +87,57 @@
         
         <!-- Contador regressivo -->
         <div id="countdown">Próxima atualização em: 15 segundos</div>
+        
+        <!-- Exibição completa da resposta -->
+        <div class="section-title">Resposta Completa da API:</div>
+        <div id="response-data">Nenhum dado recebido ainda...</div>
     </div>
 
     <script>
-        // Dados das instâncias (substitua com seus valores reais)
-        const instances = {
-            opcao1: {
-                instancia: "3D67BF8C04F6A0AE58362272D360C213",
-                token: "5FB1E9C5F40F3DA299FB1C4A"
+        // Configurações - mapeamento de telefones para instância/token
+        const phoneConfig = {
+            phone1: {
+                instancia: "3D7DCCD13769605AF7E9B2D4EBC7E202",  // Substitua pelo seu valor real
+                token: "C2D12E009B4642F99ADFC7CB",         // Substitua pelo seu valor real
+                phone: "558191037041"    // Número no formato E.164
             },
-            opcao2: {
-                instancia: "3D7DCCD13769605AF7E9B2D4EBC7E202",
-                token: "C2D12E009B4642F99ADFC7CB"
+            phone2: {
+                instancia: "3D67BF8C04F6A0AE58362272D360C213",  // Substitua pelo seu valor real
+                token: "5FB1E9C5F40F3DA299FB1C4A",         // Substitua pelo seu valor real
+                phone: "558195956982"    // Número no formato E.164
             }
         };
-
-        // Configurações
-        const CLIENT_TOKEN = "Ffa07a322c30c40f69a39b5700df9bea8S"; // Substitua pelo seu Client-Token
+        
+        const CLIENT_TOKEN = "SEU_CLIENT_TOKEN"; // Substitua pelo seu valor real
         const RELOAD_INTERVAL = 15000; // 15 segundos em milissegundos
+        
         let countdownInterval;
         let progressInterval;
 
+        // Função para formatar JSON de forma legível
+        function formatJSON(data) {
+            return JSON.stringify(data, null, 2);
+        }
 
-        alert(selectedOption)
         // Função principal
         async function fetchData() {
-            const selectedOption = document.getElementById("instance-select").value;
+            const selectedPhone = document.getElementById("phone-select").value;
             
-            if (!selectedOption) {
-                alert("Selecione uma opção!");
+            if (!selectedPhone) {
+                alert("Selecione um número de telefone!");
                 return;
             }
 
-            // Define instância e token com base na seleção
-            const { instancia, token } = instances[selectedOption];
-            const API_URL = `https://api.z-api.io/instances/${instancia}/token/${token}/phone-code/${selectedOption}`;
+            // Obtém os dados completos com base na seleção
+            const { instancia, token, phone } = phoneConfig[selectedPhone];
+            
+            // Monta a URL com todos os parâmetros dinâmicos
+            const API_URL = `https://api.z-api.io/instances/${instancia}/token/${token}/phone-code/${phone}`;
 
             try {
+                // Limpa a resposta anterior
+                document.getElementById("response-data").textContent = "Carregando...";
+                
                 // Faz a requisição à API
                 const response = await fetch(API_URL, {
                     headers: { 
@@ -113,7 +145,7 @@
                         'Content-Type': 'application/json'
                     }
                 });
-                alert(response.body)
+                
                 if (!response.ok) {
                     throw new Error(`Erro HTTP: ${response.status}`);
                 }
@@ -121,7 +153,10 @@
                 const data = await response.json();
                 
                 // Exibe o código da resposta
-                document.getElementById("code-display").textContent = data.code;
+                document.getElementById("code-display").textContent = data.code || "-----";
+                
+                // Exibe a resposta completa formatada
+                document.getElementById("response-data").textContent = formatJSON(data);
 
                 // Inicia a barra de progresso e contador
                 startProgressBar();
@@ -130,6 +165,7 @@
                 console.error("Erro:", error);
                 document.getElementById("countdown").textContent = "Erro ao carregar. Tentando novamente...";
                 document.getElementById("code-display").textContent = "ERRO";
+                document.getElementById("response-data").textContent = `Erro: ${error.message}`;
                 setTimeout(fetchData, RELOAD_INTERVAL);
             }
         }
@@ -162,8 +198,8 @@
             }, 1000);
         }
 
-        // Inicia ao selecionar uma opção
-        document.getElementById("instance-select").addEventListener("change", fetchData);
+        // Inicia ao selecionar um telefone
+        document.getElementById("phone-select").addEventListener("change", fetchData);
     </script>
 </body>
 </html>
