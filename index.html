@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Monitor Z-API</title>
+    <title>WhatsApp QR Code Monitor</title>
     <style>
         :root {
             --whatsapp-green: #128C7E;
@@ -43,6 +43,7 @@
         
         .content {
             padding: 20px;
+            text-align: center;
         }
         
         select {
@@ -55,20 +56,18 @@
             background-color: var(--whatsapp-light-gray);
         }
         
-        .code-section {
+        .qr-container {
+            margin: 20px 0;
+            padding: 15px;
             background-color: var(--whatsapp-light-gray);
-            padding: 20px;
             border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
         }
         
-        #code-display {
-            font-size: 32px;
-            letter-spacing: 3px;
-            color: var(--whatsapp-green-dark);
-            font-weight: bold;
-            margin: 10px 0;
+        #qr-image {
+            max-width: 250px;
+            max-height: 250px;
+            margin: 0 auto;
+            display: block;
         }
         
         .progress-container {
@@ -158,12 +157,18 @@
                 transform: translateY(-6px);
             }
         }
+        
+        .instructions {
+            font-size: 13px;
+            color: var(--whatsapp-gray);
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
     <div id="container">
         <div class="header">
-            <span>WhatsApp Code Monitor</span>
+            <span>WhatsApp QR Code</span>
         </div>
         
         <div class="content">
@@ -173,9 +178,9 @@
                 <option value="phone2">(81) 9595-6982</option>
             </select>
             
-            <div class="code-section">
-                <div class="section-title">CÓDIGO DE VERIFICAÇÃO</div>
-                <div id="code-display">--------</div>
+            <div class="qr-container">
+                <img id="qr-image" src="" alt="QR Code">
+                <div class="instructions">Escaneie este QR Code no WhatsApp</div>
             </div>
             
             <div class="progress-container">
@@ -212,12 +217,6 @@
         let countdownInterval;
         let progressInterval;
 
-        // Função para formatar o código com hífen
-        function formatCode(code) {
-            if (!code || code.length !== 8) return code;
-            return `${code.substring(0, 4)}-${code.substring(4)}`;
-        }
-
         // Função para formatar JSON de forma legível
         function formatJSON(data) {
             return JSON.stringify(data, null, 2);
@@ -232,11 +231,12 @@
                 return;
             }
 
-            const { instancia, token, phone } = phoneConfig[selectedPhone];
-            const API_URL = `https://api.z-api.io/instances/${instancia}/token/${token}/phone-code/${phone}`;
+            const { instancia, token } = phoneConfig[selectedPhone];
+            const API_URL = `https://api.z-api.io/instances/${instancia}/token/${token}/qr-code`;
 
             try {
                 // Mostra estado de loading
+                document.getElementById("qr-image").style.display = "none";
                 document.getElementById("response-data").innerHTML = `
                     <div style="display: flex; justify-content: center; align-items: center; height: 40px;">
                         <div class="whatsapp-loading">
@@ -258,16 +258,18 @@
                 
                 const data = await response.json();
                 
-                // Formata o código com hífen antes de exibir
-                const formattedCode = formatCode(data.code) || "---- ----";
-                document.getElementById("code-display").textContent = formattedCode;
+                // Exibe o QR Code
+                const qrImage = document.getElementById("qr-image");
+                qrImage.src = data.value;
+                qrImage.style.display = "block";
+                
                 document.getElementById("response-data").textContent = formatJSON(data);
                 startProgressBar();
 
             } catch (error) {
                 console.error("Erro:", error);
                 document.getElementById("countdown").textContent = "Erro ao carregar. Tentando novamente...";
-                document.getElementById("code-display").textContent = "ERRO";
+                document.getElementById("qr-image").style.display = "none";
                 document.getElementById("response-data").textContent = `Erro: ${error.message}`;
                 setTimeout(fetchData, RELOAD_INTERVAL);
             }
