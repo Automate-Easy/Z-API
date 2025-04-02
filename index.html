@@ -3,116 +3,220 @@
 <head>
     <title>Monitor Z-API</title>
     <style>
+        :root {
+            --whatsapp-green: #128C7E;
+            --whatsapp-green-dark: #075E54;
+            --whatsapp-green-light: #25D366;
+            --whatsapp-chat-bg: #e5ddd5;
+            --whatsapp-white: #ffffff;
+            --whatsapp-gray: #3b4a54;
+            --whatsapp-light-gray: #f0f2f5;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 20px;
-            background-color: #f0f0f0;
+            font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--whatsapp-chat-bg);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+        
         #container {
-            background: white;
+            background-color: var(--whatsapp-white);
+            width: 400px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background-color: var(--whatsapp-green-dark);
+            color: white;
+            padding: 16px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 500;
+        }
+        
+        .content {
             padding: 20px;
-            border-radius: 10px;
-            max-width: 500px;
-            margin: 0 auto;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        select, button {
-            padding: 10px;
-            margin: 10px;
-            width: 80%;
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: var(--whatsapp-light-gray);
         }
+        
+        .code-section {
+            background-color: var(--whatsapp-light-gray);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
         #code-display {
-            font-size: 3em;
-            letter-spacing: 5px;
-            margin: 20px 0;
-            color: #007bff;
+            font-size: 32px;
+            letter-spacing: 3px;
+            color: var(--whatsapp-green-dark);
+            font-weight: bold;
+            margin: 10px 0;
         }
-        #progress-container {
-            height: 10px;
-            background: #e0e0e0;
-            border-radius: 5px;
-            margin: 20px auto;
-            width: 80%;
+        
+        .progress-container {
+            height: 6px;
+            background-color: #e0e0e0;
+            border-radius: 3px;
+            margin: 15px 0;
+            overflow: hidden;
         }
+        
         #progress-bar {
             height: 100%;
-            width: 0%;
-            background: #007bff;
-            border-radius: 5px;
+            width: 100%;
+            background-color: var(--whatsapp-green-light);
             transition: width 0.1s linear;
         }
+        
         #countdown {
-            font-size: 1.2em;
-            color: #333;
+            color: var(--whatsapp-gray);
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 15px;
         }
-        #response-data {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
+        
+        .response-section {
+            background-color: var(--whatsapp-light-gray);
             padding: 15px;
+            border-radius: 8px;
             margin-top: 20px;
-            text-align: left;
-            white-space: pre-wrap;
+        }
+        
+        .section-title {
+            color: var(--whatsapp-gray);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        #response-data {
+            background-color: white;
+            padding: 12px;
+            border-radius: 6px;
             font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
             max-height: 200px;
             overflow-y: auto;
+            border: 1px solid #e0e0e0;
         }
-        .section-title {
-            font-weight: bold;
-            margin-top: 15px;
-            color: #495057;
+        
+        .whatsapp-loading {
+            display: inline-block;
+            position: relative;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .whatsapp-loading div {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--whatsapp-green-light);
+            border-radius: 50%;
+            animation: whatsapp-loading 1.2s linear infinite;
+        }
+        
+        .whatsapp-loading div:nth-child(1) {
+            animation-delay: 0s;
+            left: 0;
+        }
+        
+        .whatsapp-loading div:nth-child(2) {
+            animation-delay: -0.4s;
+            left: 8px;
+        }
+        
+        .whatsapp-loading div:nth-child(3) {
+            animation-delay: -0.8s;
+            left: 16px;
+        }
+        
+        @keyframes whatsapp-loading {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-6px);
+            }
         }
     </style>
 </head>
 <body>
     <div id="container">
-        <h1>Monitor Z-API</h1>
-        
-        <!-- Dropdown para selecionar o telefone -->
-        <select id="phone-select">
-            <option value="">Selecione um número</option>
-            <option value="phone1">(81) 9103-7041</option>
-            <option value="phone2">(81) 9595-6982</option>
-        </select>
-
-        <!-- Exibição do código -->
-        <div class="section-title">Código Recebido:</div>
-        <div id="code-display">------</div>
-        
-        <!-- Barra de progresso -->
-        <div id="progress-container">
-            <div id="progress-bar"></div>
+        <div class="header">
+            <span>WhatsApp Code Monitor</span>
         </div>
         
-        <!-- Contador regressivo -->
-        <div id="countdown">Próxima atualização em: 15 segundos</div>
-        
-        <!-- Exibição completa da resposta -->
-        <div class="section-title">Resposta Completa da API:</div>
-        <div id="response-data">Nenhum dado recebido ainda...</div>
+        <div class="content">
+            <select id="phone-select">
+                <option value="">Selecione um número</option>
+                <option value="phone1">(81) 9103-7041</option>
+                <option value="phone2">(81) 9595-6982</option>
+            </select>
+            
+            <div class="code-section">
+                <div class="section-title">CÓDIGO DE VERIFICAÇÃO</div>
+                <div id="code-display">--------</div>
+            </div>
+            
+            <div class="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+            
+            <div id="countdown">Próxima atualização em: 15 segundos</div>
+            
+            <div class="response-section">
+                <div class="section-title">RESPOSTA DA API</div>
+                <div id="response-data">Nenhum dado recebido ainda...</div>
+            </div>
+        </div>
     </div>
 
     <script>
         // Configurações - mapeamento de telefones para instância/token
         const phoneConfig = {
             phone1: {
-                instancia: "3D7DCCD13769605AF7E9B2D4EBC7E202",  // Substitua pelo seu valor real
-                token: "C2D12E009B4642F99ADFC7CB",         // Substitua pelo seu valor real
-                phone: "558191037041"    // Número no formato E.164
+                instancia: "3D7DCCD13769605AF7E9B2D4EBC7E202",
+                token: "C2D12E009B4642F99ADFC7CB",
+                phone: "558191037041"
             },
             phone2: {
-                instancia: "3D67BF8C04F6A0AE58362272D360C213",  // Substitua pelo seu valor real
-                token: "5FB1E9C5F40F3DA299FB1C4A",         // Substitua pelo seu valor real
-                phone: "558195956982"    // Número no formato E.164
+                instancia: "3D67BF8C04F6A0AE58362272D360C213",
+                token: "5FB1E9C5F40F3DA299FB1C4A",
+                phone: "558195956982"
             }
         };
         
-        const CLIENT_TOKEN = "Ffa07a322c30c40f69a39b5700df9bea8S"; // Substitua pelo seu valor real
-        const RELOAD_INTERVAL = 15000; // 15 segundos em milissegundos
+        const CLIENT_TOKEN = "Ffa07a322c30c40f69a39b5700df9bea8S";
+        const RELOAD_INTERVAL = 15000;
         
         let countdownInterval;
         let progressInterval;
+
+        // Função para formatar o código com hífen
+        function formatCode(code) {
+            if (!code || code.length !== 8) return code;
+            return `${code.substring(0, 4)}-${code.substring(4)}`;
+        }
 
         // Função para formatar JSON de forma legível
         function formatJSON(data) {
@@ -128,17 +232,19 @@
                 return;
             }
 
-            // Obtém os dados completos com base na seleção
             const { instancia, token, phone } = phoneConfig[selectedPhone];
-            
-            // Monta a URL com todos os parâmetros dinâmicos
             const API_URL = `https://api.z-api.io/instances/${instancia}/token/${token}/phone-code/${phone}`;
 
             try {
-                // Limpa a resposta anterior
-                document.getElementById("response-data").textContent = "Carregando...";
+                // Mostra estado de loading
+                document.getElementById("response-data").innerHTML = `
+                    <div style="display: flex; justify-content: center; align-items: center; height: 40px;">
+                        <div class="whatsapp-loading">
+                            <div></div><div></div><div></div>
+                        </div>
+                    </div>
+                `;
                 
-                // Faz a requisição à API
                 const response = await fetch(API_URL, {
                     headers: { 
                         'Client-Token': CLIENT_TOKEN,
@@ -152,13 +258,10 @@
                 
                 const data = await response.json();
                 
-                // Exibe o código da resposta
-                document.getElementById("code-display").textContent = data.code || "-----";
-                
-                // Exibe a resposta completa formatada
+                // Formata o código com hífen antes de exibir
+                const formattedCode = formatCode(data.code) || "---- ----";
+                document.getElementById("code-display").textContent = formattedCode;
                 document.getElementById("response-data").textContent = formatJSON(data);
-
-                // Inicia a barra de progresso e contador
                 startProgressBar();
 
             } catch (error) {
@@ -176,24 +279,20 @@
             const progressBar = document.getElementById("progress-bar");
             const countdownElement = document.getElementById("countdown");
 
-            // Resetar
             clearInterval(progressInterval);
             clearInterval(countdownInterval);
             progressBar.style.width = "100%";
 
-            // Atualiza a cada segundo
             progressInterval = setInterval(() => {
                 timeLeft--;
                 countdownElement.textContent = `Próxima atualização em: ${timeLeft} segundos`;
                 
-                // Atualiza a barra
                 const progressPercent = (timeLeft / 15) * 100;
                 progressBar.style.width = `${progressPercent}%`;
 
-                // Recarrega ao final
                 if (timeLeft <= 0) {
                     clearInterval(progressInterval);
-                    fetchData(); // Reinicia o ciclo
+                    fetchData();
                 }
             }, 1000);
         }
