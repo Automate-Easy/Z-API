@@ -93,32 +93,6 @@
             margin-bottom: 15px;
         }
         
-        .response-section {
-            background-color: var(--whatsapp-light-gray);
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        
-        .section-title {
-            color: var(--whatsapp-gray);
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-        
-        #response-data {
-            background-color: white;
-            padding: 12px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 12px;
-            white-space: pre-wrap;
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #e0e0e0;
-        }
-        
         .whatsapp-loading {
             display: inline-block;
             position: relative;
@@ -158,6 +132,21 @@
                 transform: translateY(-6px);
             }
         }
+        
+        .connected-message {
+            color: var(--whatsapp-green-dark);
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .check-icon {
+            color: var(--whatsapp-green-light);
+            font-size: 32px;
+        }
     </style>
 </head>
 <body>
@@ -174,7 +163,7 @@
             </select>
             
             <div class="code-section">
-                <div class="section-title">CÓDIGO DE VERIFICAÇÃO</div>
+                <div class="section-title">STATUS DO DISPOSITIVO</div>
                 <div id="code-display">--------</div>
             </div>
             
@@ -183,11 +172,6 @@
             </div>
             
             <div id="countdown">Próxima atualização em: 15 segundos</div>
-            
-            <div class="response-section">
-                <div class="section-title">RESPOSTA DA API</div>
-                <div id="response-data">Nenhum dado recebido ainda...</div>
-            </div>
         </div>
     </div>
 
@@ -218,11 +202,6 @@
             return `${code.substring(0, 4)}-${code.substring(4)}`;
         }
 
-        // Função para formatar JSON de forma legível
-        function formatJSON(data) {
-            return JSON.stringify(data, null, 2);
-        }
-
         // Função principal
         async function fetchData() {
             const selectedPhone = document.getElementById("phone-select").value;
@@ -236,15 +215,6 @@
             const API_URL = `https://api.z-api.io/instances/${instancia}/token/${token}/phone-code/${phone}`;
 
             try {
-                // Mostra estado de loading
-                document.getElementById("response-data").innerHTML = `
-                    <div style="display: flex; justify-content: center; align-items: center; height: 40px;">
-                        <div class="whatsapp-loading">
-                            <div></div><div></div><div></div>
-                        </div>
-                    </div>
-                `;
-                
                 const response = await fetch(API_URL, {
                     headers: { 
                         'Client-Token': CLIENT_TOKEN,
@@ -257,18 +227,35 @@
                 }
                 
                 const data = await response.json();
+                const codeDisplay = document.getElementById("code-display");
                 
-                // Formata o código com hífen antes de exibir
-                const formattedCode = formatCode(data.code) || "---- ----";
-                document.getElementById("code-display").textContent = formattedCode;
-                document.getElementById("response-data").textContent = formatJSON(data);
-                startProgressBar();
+                // Verifica se o dispositivo está conectado
+                if (data.connected) {
+                    codeDisplay.innerHTML = `
+                        <div class="connected-message">
+                            <span class="check-icon">✓</span>
+                            <span>Dispositivo conectado</span>
+                        </div>
+                    `;
+                    // Para de atualizar quando conectado
+                    clearInterval(progressInterval);
+                    clearInterval(countdownInterval);
+                    document.getElementById("countdown").textContent = "Conexão estabelecida com sucesso";
+                    document.getElementById("progress-bar").style.width = "0%";
+                } else if (data.code) {
+                    // Formata o código com hífen antes de exibir
+                    const formattedCode = formatCode(data.code) || "---- ----";
+                    codeDisplay.textContent = formattedCode;
+                    startProgressBar();
+                } else {
+                    codeDisplay.textContent = "Sem código disponível";
+                    startProgressBar();
+                }
 
             } catch (error) {
                 console.error("Erro:", error);
                 document.getElementById("countdown").textContent = "Erro ao carregar. Tentando novamente...";
                 document.getElementById("code-display").textContent = "ERRO";
-                document.getElementById("response-data").textContent = `Erro: ${error.message}`;
                 setTimeout(fetchData, RELOAD_INTERVAL);
             }
         }
