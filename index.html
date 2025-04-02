@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>LógicaDG</title>
+    <title>Lógica DG</title>
     <style>
         :root {
             --whatsapp-green: #128C7E;
             --whatsapp-green-dark: #075E54;
             --whatsapp-green-light: #25D366;
-            --whatsapp-chat-bg: #e5ddd5;
+            --whatsapp-chat-bg: #f0f2f5;
             --whatsapp-white: #ffffff;
-            --whatsapp-gray: #3b4a54;
-            --whatsapp-light-gray: #f0f2f5;
+            --whatsapp-gray: #667781;
+            --whatsapp-light-gray: #f5f6f6;
         }
         
         body {
@@ -22,60 +22,95 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            color: var(--whatsapp-gray);
         }
         
         #container {
             background-color: var(--whatsapp-white);
-            width: 400px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            width: 380px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             overflow: hidden;
         }
         
         .header {
             background-color: var(--whatsapp-green-dark);
             color: white;
-            padding: 16px;
+            padding: 20px;
             text-align: center;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 500;
         }
         
         .content {
-            padding: 20px;
+            padding: 24px;
         }
         
         select {
             width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
+            padding: 14px;
+            margin-bottom: 20px;
+            border: 1px solid #e1e3e6;
+            border-radius: 8px;
+            font-size: 15px;
             background-color: var(--whatsapp-light-gray);
+            color: var(--whatsapp-gray);
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667781' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 16px;
         }
         
         .code-section {
             background-color: var(--whatsapp-light-gray);
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
             text-align: center;
         }
         
-        #code-display {
-            font-size: 32px;
-            letter-spacing: 3px;
-            color: var(--whatsapp-green-dark);
-            font-weight: bold;
+        .section-title {
+            color: var(--whatsapp-gray);
+            font-size: 15px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        
+        .code-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
             margin: 10px 0;
+        }
+        
+        .code-digit {
+            width: 50px;
+            height: 60px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--whatsapp-green-dark);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #e1e3e6;
+        }
+        
+        .code-digit.hyphen {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            width: 10px;
         }
         
         .progress-container {
             height: 6px;
             background-color: #e0e0e0;
             border-radius: 3px;
-            margin: 15px 0;
+            margin: 20px 0;
             overflow: hidden;
         }
         
@@ -90,7 +125,32 @@
             color: var(--whatsapp-gray);
             font-size: 14px;
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .check-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .check-icon {
+            width: 60px;
+            height: 60px;
+            background-color: var(--whatsapp-green-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            animation: checkPop 0.4s ease-out;
+        }
+        
+        @keyframes checkPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
         }
         
         .whatsapp-loading {
@@ -132,21 +192,6 @@
                 transform: translateY(-6px);
             }
         }
-        
-        .connected-message {
-            color: var(--whatsapp-green-dark);
-            font-size: 24px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        
-        .check-icon {
-            color: var(--whatsapp-green-light);
-            font-size: 32px;
-        }
     </style>
 </head>
 <body>
@@ -163,8 +208,10 @@
             </select>
             
             <div class="code-section">
-                <div class="section-title">Insira o código no celular</div>
-                <div id="code-display">--------</div>
+                <div id="section-title" class="section-title">STATUS DO DISPOSITIVO</div>
+                <div id="code-display">
+                    <!-- Dinâmico - será preenchido pelo JavaScript -->
+                </div>
             </div>
             
             <div class="progress-container">
@@ -196,10 +243,23 @@
         let countdownInterval;
         let progressInterval;
 
-        // Função para formatar o código com hífen
-        function formatCode(code) {
-            if (!code || code.length !== 8) return code;
-            return `${code.substring(0, 4)}-${code.substring(4)}`;
+        // Função para criar os dígitos do código com estilo
+        function createCodeDigits(code) {
+            const formattedCode = code.length === 8 
+                ? `${code.substring(0, 4)}-${code.substring(4)}` 
+                : code;
+            
+            const container = document.createElement('div');
+            container.className = 'code-container';
+            
+            for (let i = 0; i < formattedCode.length; i++) {
+                const digit = document.createElement('div');
+                digit.className = formattedCode[i] === '-' ? 'code-digit hyphen' : 'code-digit';
+                digit.textContent = formattedCode[i];
+                container.appendChild(digit);
+            }
+            
+            return container;
         }
 
         // Função principal
@@ -228,33 +288,38 @@
                 
                 const data = await response.json();
                 const codeDisplay = document.getElementById("code-display");
+                const sectionTitle = document.getElementById("section-title");
                 
                 // Verifica se o dispositivo está conectado
                 if (data.connected) {
                     codeDisplay.innerHTML = `
-                        <div class="connected-message">
-                            <span class="check-icon">✓Conectado</span>                            
+                        <div class="check-container">
+                            <div class="check-icon">✓</div>
                         </div>
                     `;
+                    sectionTitle.textContent = "STATUS DO DISPOSITIVO";
+                    
                     // Para de atualizar quando conectado
                     clearInterval(progressInterval);
                     clearInterval(countdownInterval);
                     document.getElementById("countdown").textContent = "Conexão estabelecida com sucesso";
                     document.getElementById("progress-bar").style.width = "0%";
                 } else if (data.code) {
-                    // Formata o código com hífen antes de exibir
-                    const formattedCode = formatCode(data.code) || "---- ----";
-                    codeDisplay.textContent = formattedCode;
+                    // Exibe o código formatado
+                    sectionTitle.textContent = "Insira o código no seu celular";
+                    codeDisplay.innerHTML = '';
+                    codeDisplay.appendChild(createCodeDigits(data.code));
                     startProgressBar();
                 } else {
-                    codeDisplay.textContent = "Sem código disponível";
+                    sectionTitle.textContent = "STATUS DO DISPOSITIVO";
+                    codeDisplay.textContent = "Aguardando código...";
                     startProgressBar();
                 }
 
             } catch (error) {
                 console.error("Erro:", error);
                 document.getElementById("countdown").textContent = "Erro ao carregar. Tentando novamente...";
-                document.getElementById("code-display").textContent = "ERRO";
+                document.getElementById("code-display").innerHTML = '<div style="color: #ff4444;">ERRO</div>';
                 setTimeout(fetchData, RELOAD_INTERVAL);
             }
         }
