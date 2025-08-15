@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Conectar WhatsApp • Z-API</title>
+    <style>
+      :root { --bg:#0b1020; --card:#131a2a; --muted:#95a0b4; --ok:#2ecc71; --warn:#f39c12; --err:#e74c3c; --text:#e7ecf7; --accent:#7aa2ff; }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; background: radial-gradient(1200px 600px at 10% 10%, #111a30, #0b1020); color: var(--text); font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; }
+      .wrap { min-height: 100%; display: grid; place-items: center; padding: 24px; }
+      .card { width: 100%; max-width: 880px; background: color-mix(in oklab, var(--card) 90%, black 10%); border: 1px solid rgba(255,255,255,.06); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,.35); overflow: hidden; }
+      header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 22px; border-bottom: 1px solid rgba(255,255,255,.06); background: linear-gradient(180deg, rgba(255,255,255,.02), transparent); }
+      header .title { display: flex; gap: 12px; align-items: center; }
+      header .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 0 3px rgba(243,156,18,.18); transition: background .2s ease; }
+      header .title h1 { margin: 0; font-size: 18px; letter-spacing: .2px; }
+      header .subtitle { color: var(--muted); font-size: 13px; }
+      .content { display: grid; gap: 20px; padding: 22px; }
+      .grid { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+      @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+      .panel { background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 16px; }
+      .panel h2 { margin: 0 0 6px; font-size: 16px; }
+      .muted { color: var(--muted); font-size: 14px; }
+      .qr-wrap { display: grid; place-items: center; padding: 12px; border-radius: 12px; background: #0f1628; min-height: 360px; }
+      .qr { width: 320px; height: 320px; border-radius: 12px; background: #0c1322; display: grid; place-items: center; border: 1px dashed rgba(255,255,255,.12); overflow: hidden; }
+      .qr img { width: 100%; height: 100%; object-fit: contain; }
+      .status-ok { color: var(--ok); }
+      .status-warn { color: var(--warn); }
+      .status-err { color: var(--err); }
+      .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+      button { appearance: none; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); color: var(--text); padding: 10px 14px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: transform .06s ease, background .2s ease, border-color .2s ease; }
+      button:hover { background: rgba(255,255,255,.1); }
+      button:active { transform: translateY(1px); }
+      .btn-danger { background: color-mix(in oklab, var(--err) 20%, transparent); border-color: color-mix(in oklab, var(--err) 40%, transparent); }
+      .help { font-size: 13px; color: var(--muted); }
+      .kbd { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); padding: 1px 6px; border-radius: 6px; font-variant-numeric: tabular-nums; }
+      .chip { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); font-size:13px; color:var(--muted); }
+      .spacer { height: 8px; }
+      footer { padding: 14px 22px 20px; border-top: 1px solid rgba(255,255,255,.06); color: var(--muted); font-size: 12px; }
+      a { color: var(--accent); text-decoration: none; }
+      code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: rgba(255,255,255,.06); padding: 0 6px; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card" id="app">
+        <header>
+          <div class="title">
+            <div class="dot" id="statusDot" title="Status" aria-hidden="true"></div>
+            <div>
+              <h1>Z-API • Conectar WhatsApp</h1>
+              <div class="subtitle" id="subtitle">Aguardando status…</div>
+            </div>
+          </div>
+          <div class="row">
+            <button id="btnDisconnect" class="btn-danger" disabled>Desconectar instância</button>
+          </div>
+        </header>
+
+        <div class="content">
+          <div class="grid">
+            <section class="panel">
+              <h2>Estado da Instância</h2>
+              <div id="stateText" class="muted">—</div>
+              <div class="spacer"></div>
+              <div class="qr-wrap" id="qrWrap" hidden>
+                <div class="qr" id="qrBox">
+                  <div class="muted">Carregando QR Code…</div>
+                </div>
+              </div>
+              <div id="connectedWrap" hidden>
+                <div class="chip"><span>🟢</span><strong>Instância conectada</strong></div>
+                <div class="spacer"></div>
+                <div class="help">Se o WhatsApp desconectar, o QR code aparecerá aqui automaticamente.</div>
+              </div>
+            </section>
+
+            <aside class="panel">
+              <h2>Configuração</h2>
+              <div class="help">Edite as variáveis abaixo ou passe via query string:<br> 
+                <code>?base=</code> <code>&instance=</code> <code>&acct=</code> <code>&inst=</code> <code>&auth=Bearer</code> <code>&poll=5000</code> <code>&qrimg=1</code>
+              </div>
+              <div class="spacer"></div>
+              <div class="row"><span class="kbd">Base</span><code id="cfgBase"></code></div>
+              <div class="row"><span class="kbd">Instance</span><code id="cfgInstance"></code></div>
+              <div class="row"><span class="kbd">Account Token</span><code id="cfgAcct"></code></div>
+              <div class="row"><span class="kbd">Instance Token</span><code id="cfgInstTok"></code></div>
+              <div class="row"><span class="kbd">Auth</span><code id="cfgAuth"></code></div>
+              <div class="row"><span class="kbd">Polling</span><code id="cfgPoll"></code></div>
+              <div class="spacer"></div>
+              <div class="help">⚠️ <strong>Segurança</strong>: evite commitar tokens em repositórios públicos. Considere usar um proxy (Cloudflare Worker/Netlify/Vercel Function) para injetar o token no servidor.</div>
+            </aside>
+          </div>
+        </div>
+
+        <footer>
+          <div>Pronto para GitHub Pages. Salve como <code>index.html</code> no seu repositório.</div>
+        </footer>
+      </div>
+    </div>
+
+    <script>
+      // =====================
+      // CONFIGURAÇÃO INICIAL
+      // =====================
+      const CONFIG = {
+        baseUrl: 'https://api.z-api.io', // ⬅️ Base da API
+        instanceId: '3E4BB947350271DE447A5E06DC0B5B06',   // ⬅️ ID da instância
+        // 🔐 Tokens (use os seus valores REAIS abaixo — você pode sobrescrever por query string)
+        accountToken: 'Ffa07a322c30c40f69a39b5700df9bea8S', // ⬅️ Token da CONTA (Authorization)
+        instanceToken: 'C52D3A6CA946485B7D1CA33A',               // ⬅️ Token da INSTÂNCIA (se requerido por header extra)
+        authScheme: 'Bearer',             // 'Bearer' por padrão
+        pollMs: 5000,                     // intervalo de atualização (ms)
+        // Endpoints (ajuste para batê-los exatamente com sua Z-API)
+        endpoints: {
+          status(base, id) { return `${base}/instances/${id}/status`; },
+          qr(base, id)     { return `${base}/instances/${id}/qr-code`; },
+          disconnect(base, id) { return `${base}/instances/${id}/disconnect`; },
+        },
+        // Caso o QR seja servido como imagem direta (PNG), ative isto com &qrimg=1
+        fetchImageQr: false,
+        // Alguns ambientes pedem header de instância específico; edite o nome aqui se necessário
+        instanceTokenHeader: 'X-Instance-Token',
+      };
+
+      // ------- Overrides via query string -------
+      const url = new URL(location.href);
+      const override = (key, param) => url.searchParams.get(param) ?? CONFIG[key];
+      CONFIG.baseUrl       = override('baseUrl','base');
+      CONFIG.instanceId    = override('instanceId','instance');
+      CONFIG.accountToken  = override('accountToken','acct');
+      CONFIG.instanceToken = override('instanceToken','inst');
+      CONFIG.authScheme    = override('authScheme','auth');
+      CONFIG.pollMs        = parseInt(url.searchParams.get('poll') || CONFIG.pollMs, 10) || CONFIG.pollMs;
+      CONFIG.fetchImageQr  = url.searchParams.get('qrimg') === '1' ? true : CONFIG.fetchImageQr;
+
+      // ------- UI Refs -------
+      const els = {
+        dot: document.getElementById('statusDot'),
+        subtitle: document.getElementById('subtitle'),
+        stateText: document.getElementById('stateText'),
+        qrWrap: document.getElementById('qrWrap'),
+        qrBox: document.getElementById('qrBox'),
+        connectedWrap: document.getElementById('connectedWrap'),
+        btnDisconnect: document.getElementById('btnDisconnect'),
+        cfgBase: document.getElementById('cfgBase'),
+        cfgInstance: document.getElementById('cfgInstance'),
+        cfgAcct: document.getElementById('cfgAcct'),
+        cfgInstTok: document.getElementById('cfgInstTok'),
+        cfgAuth: document.getElementById('cfgAuth'),
+        cfgPoll: document.getElementById('cfgPoll'),
+      };
+
+      function setCfgUI() {
+        els.cfgBase.textContent = CONFIG.baseUrl;
+        els.cfgInstance.textContent = CONFIG.instanceId;
+        els.cfgAcct.textContent = CONFIG.accountToken ? '••••••••' : '(vazio)';
+        els.cfgInstTok.textContent = CONFIG.instanceToken ? '••••••••' : '(opcional)';
+        els.cfgAuth.textContent = `${CONFIG.authScheme}`;
+        els.cfgPoll.textContent = CONFIG.pollMs + 'ms';
+      }
+
+      function authHeaders() {
+        const h = { 'Accept': 'application/json' };
+        if (CONFIG.accountToken) h['Authorization'] = `${CONFIG.authScheme} ${CONFIG.accountToken}`;
+        if (CONFIG.instanceToken) h[CONFIG.instanceTokenHeader] = CONFIG.instanceToken; // se necessário
+        return h;
+      }
+
+      async function getJSON(fetchUrl, opts = {}) {
+        const res = await fetch(fetchUrl, { ...opts, headers: { ...authHeaders(), ...(opts.headers||{}) }, cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status} ao buscar ${fetchUrl}`);
+        return res.json();
+      }
+
+      async function getImageBlob(fetchUrl, opts = {}) {
+        const res = await fetch(fetchUrl, { ...opts, headers: { ...authHeaders(), ...(opts.headers||{}) }, cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status} ao buscar imagem`);
+        return res.blob();
+      }
+
+      function setStatus(connected, details = '') {
+        els.dot.style.background = connected ? 'var(--ok)' : 'var(--warn)';
+        els.subtitle.textContent = connected ? 'Instância conectada' : 'Instância desconectada';
+        els.stateText.innerHTML = details || (connected ? '<span class="status-ok">Conectado</span>' : '<span class="status-warn">Desconectado</span>');
+        els.connectedWrap.hidden = !connected;
+        els.qrWrap.hidden = connected;
+        els.btnDisconnect.disabled = !connected;
+      }
+
+      function setError(message) {
+        els.subtitle.textContent = 'Erro';
+        els.stateText.innerHTML = `<span class="status-err">${message}</span>`;
+        els.dot.style.background = 'var(--err)';
+      }
+
+      async function renderQr() {
+        els.qrBox.innerHTML = '<div class="muted">Carregando QR Code…</div>';
+        try {
+          const qrUrl = CONFIG.endpoints.qr(CONFIG.baseUrl, CONFIG.instanceId);
+          if (CONFIG.fetchImageQr) {
+            const blob = await getImageBlob(qrUrl);
+            const url = URL.createObjectURL(blob);
+            els.qrBox.innerHTML = `<img src="${url}" alt="QR Code" />`;
+          } else {
+            const data = await getJSON(qrUrl);
+            const dataUrl = data.qrCode || (data.base64 ? `data:image/png;base64,${data.base64}` : null) || data.image || data.dataURL;
+            if (!dataUrl) throw new Error('Formato de QR não reconhecido');
+            els.qrBox.innerHTML = `<img src="${dataUrl}" alt="QR Code" />`;
+          }
+        } catch (err) {
+          console.error(err);
+          els.qrBox.innerHTML = `<div class="status-err">Falha ao carregar QR: ${err.message}</div>`;
+        }
+      }
+
+      function parseConnected(data) {
+        // Tenta diversos formatos comuns retornados pela Z-API
+        if (typeof data.connected === 'boolean') return data.connected;
+        if (typeof data.isConnected === 'boolean') return data.isConnected;
+        if (typeof data.status === 'string') return /connect/i.test(data.status);
+        if (typeof data.state === 'string') return /connect/i.test(data.state);
+        return false;
+      }
+
+      async function fetchStatusAndUpdate() {
+        setCfgUI();
+        try {
+          const statusUrl = CONFIG.endpoints.status(CONFIG.baseUrl, CONFIG.instanceId);
+          const data = await getJSON(statusUrl);
+          const connected = parseConnected(data);
+          const detailText = `<div>Estado: <strong>${data.state ?? data.status ?? (connected ? 'CONNECTED' : 'DISCONNECTED')}</strong></div>` +
+                             (data.phone ? `<div>Número: <code>${data.phone}</code></div>` : '') +
+                             (data.updatedAt ? `<div>Atualizado: <code>${new Date(data.updatedAt).toLocaleString()}</code></div>` : '');
+          setStatus(connected, detailText);
+          if (!connected) await renderQr();
+        } catch (err) {
+          console.error(err);
+          setError(err.message);
+          try { await renderQr(); } catch {}
+        }
+      }
+
+      async function disconnectInstance() {
+        els.btnDisconnect.disabled = true;
+        try {
+          const url = CONFIG.endpoints.disconnect(CONFIG.baseUrl, CONFIG.instanceId);
+          const res = await fetch(url, { method: 'POST', headers: authHeaders() });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          els.subtitle.textContent = 'Instância desconectada';
+          await fetchStatusAndUpdate();
+        } catch (err) {
+          console.error(err);
+          setError('Falha ao desconectar: ' + err.message);
+        } finally {
+          els.btnDisconnect.disabled = false;
+        }
+      }
+
+      // Eventos
+      els.btnDisconnect.addEventListener('click', disconnectInstance);
+
+      // Polling
+      let timer = null;
+      function startPolling() {
+        if (timer) clearInterval(timer);
+        timer = setInterval(fetchStatusAndUpdate, CONFIG.pollMs);
+      }
+
+      // Inicialização
+      (async function init() {
+        await fetchStatusAndUpdate();
+        startPolling();
+      })();
+    </script>
+  </body>
+</html>
